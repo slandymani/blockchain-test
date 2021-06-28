@@ -14,16 +14,16 @@ import (
 // Used to not have an error if strconv is unused
 var _ = strconv.Itoa(42)
 
-type createWhoisRequest struct {
+type buyNameRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string       `json:"creator"`
-	Value   string       `json:"value"`
+	Buyer   string       `json:"buyer"`
+	Name    string       `json:"name"`
 	Price   string       `json:"price"`
 }
 
-func createWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func buyNameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req createWhoisRequest
+		var req buyNameRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
@@ -32,21 +32,19 @@ func createWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
-		creator, err := sdk.AccAddressFromBech32(req.Creator)
+		creator, err := sdk.AccAddressFromBech32(req.Buyer)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		parsedValue := req.Value
+		coins, err := sdk.ParseCoins(req.Price)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
-		parsedPrice := req.Price
-
-		msg := types.NewMsgCreateWhois(
-			creator,
-			parsedValue,
-			parsedPrice,
-		)
+		msg := types.NewMsgBuyName(req.Name, coins, creator)
 
 		err = msg.ValidateBasic()
 		if err != nil {
@@ -58,17 +56,16 @@ func createWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-type setWhoisRequest struct {
+type SetNameRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	ID      string       `json:"id"`
 	Creator string       `json:"creator"`
 	Value   string       `json:"value"`
-	Price   string       `json:"price"`
+	Name    string       `json:"name"`
 }
 
-func setWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func setNameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req setWhoisRequest
+		var req SetNameRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
@@ -83,16 +80,7 @@ func setWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		parsedValue := req.Value
-
-		parsedPrice := req.Price
-
-		msg := types.NewMsgSetWhois(
-			creator,
-			req.ID,
-			parsedValue,
-			parsedPrice,
-		)
+		msg := types.NewMsgSetName(creator, req.Value, req.Name)
 
 		err = msg.ValidateBasic()
 		if err != nil {
@@ -104,15 +92,15 @@ func setWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-type deleteWhoisRequest struct {
+type deleteNameRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Creator string       `json:"creator"`
-	ID      string       `json:"id"`
+	Name    string       `json:"name"`
 }
 
-func deleteWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func deleteNameHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req deleteWhoisRequest
+		var req deleteNameRequest
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
@@ -126,7 +114,7 @@ func deleteWhoisHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		msg := types.NewMsgDeleteWhois(req.ID, creator)
+		msg := types.NewMsgDeleteName(req.Name, creator)
 
 		err = msg.ValidateBasic()
 		if err != nil {

@@ -28,21 +28,21 @@ jobs:
 
       - name: Compile
         run: |
-          cd cmd/blockchaintestd
+          cd cmd/blockchain-testd
           go build .
           cd ..
-          cd blockchaintestcli
+          cd blockchain-testcli
           go build .
 
       - uses: actions/upload-artifact@v2
         with:
-          name: blockchaintestcli ${{ matrix.targetos }}
-          path: cmd/blockchaintestcli/blockchaintestcli
+          name: blockchain-testcli ${{ matrix.targetos }}
+          path: cmd/blockchain-testcli/blockchain-testcli
 
       - uses: actions/upload-artifact@v2
         with:
           name: blockchaintestd ${{ matrix.targetos }}
-          path: cmd/blockchaintestd/blockchaintestd
+          path: cmd/blockchain-testd/blockchain-testd
 
   linux:
     runs-on: ubuntu-latest
@@ -63,18 +63,18 @@ jobs:
 
       - name: Compile
         run: |
-          cd cmd/blockchaintestd
+          cd cmd/blockchain-testd
           go build .
           cd ..
-          cd blockchaintestcli
+          cd blockchain-testcli
           go build .
 
       - uses: actions/upload-artifact@v2
         with:
           name: blockchaintestcli ${{ matrix.arch }}
-          path: cmd/blockchaintestcli/blockchaintestcli
+          path: cmd/blockchain-testcli/blockchain-testcli
 
       - uses: actions/upload-artifact@v2
         with:
           name: blockchaintestd ${{ matrix.arch }}
-          path: cmd/blockchaintestd/blockchaintestd
+          path: cmd/blockchain-testd/blockchain-testd

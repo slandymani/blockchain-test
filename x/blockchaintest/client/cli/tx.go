@@ -23,7 +23,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 	blockchaintestTxCmd.AddCommand(flags.PostCommands(
 		// this line is used by starport scaffolding # 1
-		GetCmdCreateWhois(cdc),
+		GetCmdBuyName(cdc),
 		GetCmdSetWhois(cdc),
 		GetCmdDeleteWhois(cdc),
 	)...)

@@ -8,18 +8,12 @@ import (
 	"github.com/slandymani/blockchain-test/x/blockchaintest/types"
 )
 
-func handleMsgSetWhois(ctx sdk.Context, k keeper.Keeper, msg types.MsgSetWhois) (*sdk.Result, error) {
-	var whois = types.Whois{
-		Creator: msg.Creator,
-		ID:      msg.ID,
-		Value:   msg.Value,
-		Price:   msg.Price,
-	}
-	if !msg.Creator.Equals(k.GetWhoisOwner(ctx, msg.ID)) { // Checks if the the msg sender is the same as the current owner
+func handleMsgSetName(ctx sdk.Context, k keeper.Keeper, msg types.MsgSetName) (*sdk.Result, error) {
+	if !msg.Owner.Equals(k.GetCreator(ctx, msg.Name)) { // Checks if the the msg sender is the same as the current owner
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Incorrect Owner") // If not, throw an error
 	}
 
-	k.SetWhois(ctx, whois)
+	k.SetName(ctx, msg.Name, msg.Value)
 
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }

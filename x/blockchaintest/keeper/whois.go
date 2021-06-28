@@ -30,33 +30,22 @@ func (k Keeper) GetWhoisCount(ctx sdk.Context) int64 {
 	return count
 }
 
-// SetWhoisCount set the total number of whois
-func (k Keeper) SetWhoisCount(ctx sdk.Context, count int64) {
+// SetNameCount set the total number of whois
+func (k Keeper) SetNameCount(ctx sdk.Context, count int64) {
 	store := ctx.KVStore(k.storeKey)
 	byteKey := []byte(types.WhoisCountPrefix)
 	bz := []byte(strconv.FormatInt(count, 10))
 	store.Set(byteKey, bz)
 }
 
-// CreateWhois creates a whois
-func (k Keeper) CreateWhois(ctx sdk.Context, msg types.MsgCreateWhois) {
-	// Create the whois
-	count := k.GetWhoisCount(ctx)
-	var whois = types.Whois{
-		Creator: msg.Creator,
-		ID:      strconv.FormatInt(count, 10),
-		Value:   msg.Value,
-		Price:   msg.Price,
-	}
-
-	store := ctx.KVStore(k.storeKey)
-	key := []byte(types.WhoisPrefix + whois.ID)
-	value := k.cdc.MustMarshalBinaryLengthPrefixed(whois)
-	store.Set(key, value)
-
-	// Update whois count
-	k.SetWhoisCount(ctx, count+1)
-}
+// BuyName creates a whois. This function is included in starport type scaffolding.
+// We won't use this function in our application, so it can be commented out.
+// func (k Keeper) BuyName(ctx sdk.Context, whois types.Whois) {
+// 	store := ctx.KVStore(k.storeKey)
+// 	key := []byte(types.WhoisPrefix + whois.Value)
+// 	value := k.cdc.MustMarshalBinaryLengthPrefixed(whois)
+// 	store.Set(key, value)
+// }
 
 // GetWhois returns the whois information
 func (k Keeper) GetWhois(ctx sdk.Context, key string) (types.Whois, error) {
@@ -70,12 +59,12 @@ func (k Keeper) GetWhois(ctx sdk.Context, key string) (types.Whois, error) {
 	return whois, nil
 }
 
-// SetWhois sets a whois
-func (k Keeper) SetWhois(ctx sdk.Context, whois types.Whois) {
-	whoisKey := whois.ID
+// SetName sets a whois. We modified this function to use the `name` value as the key instead of msg.ID
+func (k Keeper) SetWhois(ctx sdk.Context, name string, whois types.Whois) {
+
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(whois)
-	key := []byte(types.WhoisPrefix + whoisKey)
+	key := []byte(types.WhoisPrefix + name)
 	store.Set(key, bz)
 }
 
@@ -115,6 +104,85 @@ func getWhois(ctx sdk.Context, path []string, k Keeper) (res []byte, sdkError er
 	}
 
 	return res, nil
+}
+
+// Resolves a name, returns the value
+func resolveName(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
+	value := keeper.ResolveName(ctx, path[0])
+
+	if value == "" {
+		return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "could not resolve name")
+	}
+
+	res, err := codec.MarshalJSONIndent(keeper.cdc, types.QueryResResolve{Value: value})
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return res, nil
+}
+
+// Get creator of the item
+func (k Keeper) GetCreator(ctx sdk.Context, key string) sdk.AccAddress {
+	whois, _ := k.GetWhois(ctx, key)
+	return whois.Creator
+}
+
+// Check if the key exists in the store
+func (k Keeper) Exists(ctx sdk.Context, key string) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has([]byte(types.WhoisPrefix + key))
+}
+
+// ResolveName - returns the string that the name resolves to
+func (k Keeper) ResolveName(ctx sdk.Context, name string) string {
+	whois, _ := k.GetWhois(ctx, name)
+	return whois.Value
+}
+
+// SetName - sets the value string that a name resolves to
+func (k Keeper) SetName(ctx sdk.Context, name string, value string) {
+	whois, _ := k.GetWhois(ctx, name)
+	whois.Value = value
+	k.SetWhois(ctx, name, whois)
+}
+
+// HasOwner - returns whether or not the name already has an owner
+func (k Keeper) HasCreator(ctx sdk.Context, name string) bool {
+	whois, _ := k.GetWhois(ctx, name)
+	return !whois.Creator.Empty()
+}
+
+// SetOwner - sets the current owner of a name
+func (k Keeper) SetCreator(ctx sdk.Context, name string, creator sdk.AccAddress) {
+	whois, _ := k.GetWhois(ctx, name)
+	whois.Creator = creator
+	k.SetWhois(ctx, name, whois)
+}
+
+// GetPrice - gets the current price of a name
+func (k Keeper) GetPrice(ctx sdk.Context, name string) sdk.Coins {
+	whois, _ := k.GetWhois(ctx, name)
+	return whois.Price
+}
+
+// SetPrice - sets the current price of a name
+func (k Keeper) SetPrice(ctx sdk.Context, name string, price sdk.Coins) {
+	whois, _ := k.GetWhois(ctx, name)
+	whois.Price = price
+	k.SetWhois(ctx, name, whois)
+}
+
+// Check if the name is present in the store or not
+func (k Keeper) IsNamePresent(ctx sdk.Context, name string) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has([]byte(name))
+}
+
+// Get an iterator over all names in which the keys are the names and the values are the whois
+func (k Keeper) GetNamesIterator(ctx sdk.Context) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(store, []byte(types.WhoisPrefix))
 }
 
 // Get creator of the item

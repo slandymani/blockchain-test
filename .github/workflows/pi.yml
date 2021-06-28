@@ -19,49 +19,49 @@ jobs:
     steps:
       - name: Check out blockchaintest
         uses: actions/checkout@v2
-
-      - name: Setup go
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.15
-
-      - name: Compile blockchaintest
-        run: |
-            cd cmd/blockchaintestd
-            go build .
-            cd ..
-            cd blockchaintestcli
-            go build .
-        env:
-          GOOS: linux
-          GOARCH: arm64
-
-      - name: Upload blockchaintest Arm64 CLI
-        uses: actions/upload-artifact@v2
-        with:
-          name: blockchaintestcli arm64
-          path: cmd/blockchaintestcli/blockchaintestcli
-
-      - name: Upload blockchaintest Arm64 daemon
-        uses: actions/upload-artifact@v2
-        with:
-          name: blockchaintestd arm64
-          path: cmd/blockchaintestd/blockchaintestd
-
-      - name: Build blockchaintest.img
-        run: docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-builder-arm build .pi/pibuild.json
-
-      - name: Install PiShrink
-        run: |
-          wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
-          chmod +x pishrink.sh
-          sudo mv pishrink.sh /usr/local/bin
-
-      - name: Shrink blockchaintest.img
-        run: sudo pishrink.sh -a -Z -v blockchaintest.img
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: blockchaintest PI
-          path: blockchaintest.img.xz
+#
+#      - name: Setup go
+#        uses: actions/setup-go@v1
+#        with:
+#          go-version: 1.15
+#
+#      - name: Compile blockchaintest
+#        run: |
+#            cd cmd/blockchain-testd
+#            go build .
+#            cd ..
+#            cd blockchain-testcli
+#            go build .
+#        env:
+#          GOOS: linux
+#          GOARCH: arm64
+#
+#      - name: Upload blockchaintest Arm64 CLI
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: blockchain-testcli arm64
+#          path: cmd/blockchain-testcli/blockchain-testcli
+#
+#      - name: Upload blockchaintest Arm64 daemon
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: blockchaintestd arm64
+#          path: cmd/blockchain-testd/blockchain-testd
+#
+#      - name: Build blockchaintest.img
+#        run: docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-builder-arm build .pi/pibuild.json
+#
+#      - name: Install PiShrink
+#        run: |
+#          wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
+#          chmod +x pishrink.sh
+#          sudo mv pishrink.sh /usr/local/bin
+#
+#      - name: Shrink blockchaintest.img
+#        run: sudo pishrink.sh -a -Z -v blockchaintest.img
+#
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: blockchaintest PI
+#          path: blockchaintest.img.xz
